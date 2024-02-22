@@ -32,14 +32,14 @@
                 {{ lvl.title }}
               </div>
             </div>
-              <button class="blockGame__info_btn"
-                      data-action="start"
-                      v-on:click="startGame"
-                      :disabled="buttonActive.isDisabled">
-                Начать игру
-              </button>
+            <button class="blockGame__info_btn"
+                    data-action="start"
+                    v-on:click="startGame"
+                    :disabled="buttonActive.isDisabled">
+              Начать игру
+            </button>
 
-            <div class="blockGame__info_end" v-if="end">
+            <div class="blockGame__info_end" v-if="status === 'end'">
               Конец игры
             </div>
           </div>
@@ -91,7 +91,6 @@ export default {
       audio: {
         src: ""
       },
-      gameIsReady: false,
       btnGame: [
         {
           id: 1,
@@ -118,7 +117,6 @@ export default {
           sound: 'simongame_4'
         }
       ],
-      end: false
     }
   },
 
@@ -135,49 +133,49 @@ export default {
       let j = 0;
       for (let elem of this.simonSet) {
         setTimeout(() => {
-          this.playSound(this.btnGame[elem-1].sound)
-          this.btnGame[elem-1].active = true
+          this.playSound(this.btnGame[elem - 1].sound)
+          this.btnGame[elem - 1].active = true
           setTimeout(() => {
-            this.btnGame[elem-1].active = false
+            this.btnGame[elem - 1].active = false
             j++
             if (j === this.simonSet.length) this.btnGameActive.isDisabled = false
           }, 300)
 
         }, this.interval * i++, j)
       }
-      this.gameIsReady = true
+      this.status = 'run'
     },
 
     onclickBtn(btn, song) {
       this.playSound(song)
-      if (this.gameIsReady) {
+      if (this.status === 'run') {
         this.userSet.push(btn)
         if (btn === this.simonSet[this.click] && this.userSet.length === this.simonSet.length) {
-          this.gameReset(false)
-          this.round++
+          this.roundNext()
           this.startGame()
         } else if (btn !== this.simonSet[this.click]) {
-          this.gameReset(true)
-          this.end = true
-          setTimeout(() => {
-            this.end = false
-          }, 3000)
+          this.gameReset()
         } else {
           this.click++
         }
       }
     },
 
-    gameReset(full) {
+    roundNext() {
       this.simonSet = []
       this.userSet = []
       this.click = 0
-      if (full) {
-        this.round = 1
-        this.lvlActive.isDisabled = false
-        this.button.isDisabled = false
-        this.gameIsReady = false
-      }
+      this.round++
+    },
+
+    gameReset() {
+      this.round = 1
+      this.lvlActive.isDisabled = false
+      this.buttonActive.isDisabled = false
+      this.status = 'end'
+      setTimeout(() => {
+        this.status = 'none'
+      }, 3000)
     },
 
     playSound(sound) {
