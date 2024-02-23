@@ -120,6 +120,13 @@ export default {
     }
   },
 
+  mounted() {
+    this.$watch('status', function () {
+      if(this.status === 'end') this.gameReset()
+      if(this.status === 'round') this.roundNext()
+    })
+  },
+
   methods: {
 
     startGame() {
@@ -129,21 +136,24 @@ export default {
       for (let i = 0; i < this.round; i++) {
         this.simonSet.push(Math.floor(Math.random() * (5 - 1) + 1))
       }
-      let i = 1;
-      let j = 0;
-      for (let elem of this.simonSet) {
-        setTimeout(() => {
-          this.playSound(this.btnGame[elem - 1].sound)
-          this.btnGame[elem - 1].active = true
-          setTimeout(() => {
-            this.btnGame[elem - 1].active = false
-            j++
-            if (j === this.simonSet.length) this.btnGameActive.isDisabled = false
-          }, 300)
+      this.runGame()
+    },
 
-        }, this.interval * i++, j)
+    runGame(){
+      for(let i = 1; i <= this.simonSet.length; i++){
+        let id = i - 1
+        let idBtn = this.simonSet[id]-1
+        setTimeout(() => {
+          this.playSound(this.btnGame[idBtn].sound)
+          this.btnGame[idBtn].active = true
+          setTimeout(() => {
+            this.btnGame[idBtn].active = false
+          }, 300)
+        }, this.interval * i, id)
       }
+      this.btnGameActive.isDisabled = false
       this.status = 'run'
+
     },
 
     onclickBtn(btn, song) {
@@ -151,10 +161,9 @@ export default {
       if (this.status === 'run') {
         this.userSet.push(btn)
         if (btn === this.simonSet[this.click] && this.userSet.length === this.simonSet.length) {
-          this.roundNext()
-          this.startGame()
+          this.status = 'round'
         } else if (btn !== this.simonSet[this.click]) {
-          this.gameReset()
+          this.status = 'end'
         } else {
           this.click++
         }
@@ -166,13 +175,15 @@ export default {
       this.userSet = []
       this.click = 0
       this.round++
+      this.startGame()
     },
 
     gameReset() {
+      this.simonSet = []
+      this.userSet = []
       this.round = 1
       this.lvlActive.isDisabled = false
       this.buttonActive.isDisabled = false
-      this.status = 'end'
       setTimeout(() => {
         this.status = 'none'
       }, 3000)
