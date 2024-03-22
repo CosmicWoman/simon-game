@@ -13,12 +13,13 @@
 
         <div class="blockGame__block">
           <div class="blockGame__btn">
-            <button v-for="btn of btnGame"
-                    v-bind:key="btn.id"
-                    :class="['blockGame__btn_' + btn.color + ' ' + [btn.active ? 'active' : '']]"
-                    :id="btn.id"
-                    v-on:click="onclickBtn(btn.id, btn.sound)"
-                    :disabled="btnGameActive.isDisabled"/>
+            <MyButton v-for="btn of btnGame"
+                      :key="btn.id"
+                      :id="btn.id"
+                      :class="['blockGame__btn_' + btn.color, [btn.active ? 'active' : '']]"
+                      @click="onclickBtn(btn.id, btn.sound)"
+                      :disabled="btnGameActive.isDisabled"
+            />
           </div>
           <div class="blockGame__info">
             <div class="blockGame__info_lvl lvl">
@@ -32,15 +33,20 @@
                 {{ lvl.title }}
               </div>
             </div>
-            <button class="blockGame__info_btn"
-                    data-action="start"
-                    v-on:click="startGame"
-                    :disabled="buttonActive.isDisabled">
+            <MyButton class="blockGame__info_btn btn"
+                      v-on:click="startGame"
+                      :disabled="buttonActive.isDisabled">
               Начать игру
-            </button>
+            </MyButton>
 
-            <div class="blockGame__info_end" v-if="status === 'end'">
-              Конец игры
+            <div class="blockGame__info_end end" v-if="status === 'end'">
+              <div class="end__title">
+                Конец игры
+                <MyButton class="end__title_btn btn"
+                          v-on:click="status = 'none'">
+                  Ok
+                </MyButton>
+              </div>
             </div>
           </div>
         </div>
@@ -53,7 +59,10 @@
 </template>
 
 <script>
+import MyButton from "@/components/UI/MyButton";
+
 export default {
+  components: {MyButton},
   data() {
     return {
       status: 'none',
@@ -64,17 +73,14 @@ export default {
       level: [
         {
           title: "Легкий",
-          name: "difficulty",
           interval: 1500
         },
         {
           title: "Средний",
-          name: "difficulty",
           interval: 1000
         },
         {
           title: "Сложный",
-          name: "difficulty",
           interval: 400
         }
       ],
@@ -122,27 +128,30 @@ export default {
 
   mounted() {
     this.$watch('status', function () {
-      if(this.status === 'end') this.gameReset()
-      if(this.status === 'round') this.roundNext()
+      if (this.status === 'end') this.gameReset()
+      if (this.status === 'round') this.roundNext()
     })
   },
 
   methods: {
+    setStatus() {
+      this.status = 'none'
+    },
 
     startGame() {
       this.lvlActive.isDisabled = true
       this.buttonActive.isDisabled = true
       this.btnGameActive.isDisabled = true
       for (let i = 0; i < this.round; i++) {
-        this.simonSet.push(Math.floor(Math.random() * (5 - 1) + 1))
+        this.simonSet.push(Math.floor(Math.random() * 4))
       }
       this.runGame()
     },
 
-    runGame(){
-      for(let i = 1; i <= this.simonSet.length; i++){
+    runGame() {
+      for (let i = 1; i <= this.simonSet.length; i++) {
         let id = i - 1
-        let idBtn = this.simonSet[id]-1
+        let idBtn = this.simonSet[id] - 1
         setTimeout(() => {
           this.playSound(this.btnGame[idBtn].sound)
           this.btnGame[idBtn].active = true
@@ -171,11 +180,11 @@ export default {
     },
 
     roundNext() {
-      this.simonSet = []
       this.userSet = []
       this.click = 0
       this.round++
-      this.startGame()
+      this.simonSet.push(Math.floor(Math.random() * 4 + 1))
+      this.runGame()
     },
 
     gameReset() {
@@ -184,16 +193,14 @@ export default {
       this.round = 1
       this.lvlActive.isDisabled = false
       this.buttonActive.isDisabled = false
-      setTimeout(() => {
-        this.status = 'none'
-      }, 3000)
     },
 
     playSound(sound) {
       let audio = new Audio(require(`/src/static/${sound}.mp3`))
       audio.play()
     }
-  }
+  },
+
 }
 </script>
 
